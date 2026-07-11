@@ -22,7 +22,8 @@ def init_db():
         "time REAL NOT NULL,"
         "machine TEXT NOT NULL DEFAULT 'La Marzocco GS3 MP',"
         "grinder TEXT NOT NULL DEFAULT 'Mahlkönig EK43',"
-        "created_at TEXT DEFAULT (datetime('now'))"
+        "created_at TEXT DEFAULT (datetime('now')),"
+        "notes TEXT DEFAULT ''"
         ")"
     )
     conn.commit()
@@ -36,6 +37,10 @@ def init_db():
     except sqlite3.OperationalError:
         pass  # column already exists
     conn.commit()
+    try:
+        conn.execute("ALTER TABLE shots ADD COLUMN notes TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     conn.close()
 
 def get_db():
@@ -106,13 +111,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
         machine = data.get("machine", "La Marzocco GS3 MP")
         grinder = data.get("grinder", "Mahlkönig EK43")
+        notes = data.get("notes", "")
         if not isinstance(machine, str) or not isinstance(grinder, str):
             self._error("machine and grinder must be strings")
             return
         conn = get_db()
         cur = conn.execute(
-            "INSERT INTO shots (grind, dose, yield, time, machine, grinder) VALUES (?, ?, ?, ?, ?, ?)",
-            (data["grind"], data["dose"], data["yield"], data["time"], machine, grinder),
+            "INSERT INTO shots (grind, dose, yield, time, machine, grinder, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (data["grind"], data["dose"], data["yield"], data["time"], machine, grinder, notes),
         )
         conn.commit()
         row = conn.execute("SELECT * FROM shots WHERE id = ?", (cur.lastrowid,)).fetchone()

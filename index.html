@@ -286,6 +286,8 @@ tbody tr:hover td {
       <input type="text" id="grinder" value="Mahlkönig EK43">
     </div>
   </div>
+  <label for="notes">Notes</label>
+  <input type="text" id="notes" placeholder="e.g. dark roast, 2 weeks old, humid day">
   <div class="ratio-wrap">
     <div class="ratio-display">Ratio: <span id="ratio">2.00</span></div>
   </div>
@@ -340,11 +342,12 @@ function renderTable() {
       <td>${s.yield}</td>
       <td>${ratio}</td>
       <td>${s.time}</td>
+      <td>${s.notes || '—'}</td>
       <td><button class="delete-btn" data-id="${s.id}">✕</button></td>
     </tr>`;
   }).join('');
   wrap.innerHTML = `<table><thead><tr>
-    <th>Date</th><th>Setup</th><th>Grind</th><th>Dose</th><th>Yield</th><th>Ratio</th><th>Time</th><th></th>
+    <th>Date</th><th>Setup</th><th>Grind</th><th>Dose</th><th>Yield</th><th>Ratio</th><th>Time</th><th>Notes</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -356,12 +359,14 @@ async function logShot() {
   const machineVal = document.getElementById('machine').value;
   const grinderVal = document.getElementById('grinder').value;
 
+  const notesVal = document.getElementById('notes').value;
+
   if ([grind, dose, yieldW, time].some(isNaN) || dose <= 0) return;
 
   const res = await fetch('/api/shots', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ grind, dose, yield: yieldW, time, machine: machineVal, grinder: grinderVal })
+    body: JSON.stringify({ grind, dose, yield: yieldW, time, machine: machineVal, grinder: grinderVal, notes: notesVal })
   });
   if (res.ok) {
     await load();
